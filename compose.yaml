@@ -1,21 +1,55 @@
-version: '3'
+version: '3.4'
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-15}-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+  php_re_manager:
+    container_name: php_re_manager
+    build:
+      context: ./.docker/php
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
-
+      - .:/var/www/symfony:cached
+      - ./var:/var/www/symfony/var
+      - ./vendor:/var/www/symfony/vendor
+    networks:
+      - re_manager
+  nginx_re_manager:
+    container_name: nginx_re_manager
+    build:
+      context: ./.docker/nginx
+    volumes:
+      - .:/var/www/symfony:cached
+      - ./var:/var/www/symfony/var
+      - ./vendor:/var/www/symfony/vendor
+    ports:
+      - 8080:80
+    networks:
+      - re_manager
+  mariadb_re_manager:
+    container_name: mariadb_re_manager
+    image: mariadb:10.4
+    restart: always
+    volumes:
+      - ./.docker-files/data/mariadb-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: qwerty
+      TZ: Europe/Warsaw
+    ports:
+      - 3309:3306
+    networks:
+      - re_manager
+  phpmyadmin_re_manager:
+    container_name: phpmyadmin_re_manager
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - 8081:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mariadb_gym_app
+      - UPLOAD_LIMIT=300M
+    depends_on:
+      - mariadb_re_manager
+    networks:
+      - re_manager
 volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+  mariadb-data:
+networks:
+  re_manager:
