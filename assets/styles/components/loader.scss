@@ -1,0 +1,22 @@
+.re-loader
+{
+  z-index: 10000;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+.re-loader-content
+{
+  z-index: 10001;
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  width: 20%;
+}
+.spinner-border
+{
+  --bs-spinner-width: 6rem;
+  --bs-spinner-height: 6rem;
+}
